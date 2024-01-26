@@ -46,12 +46,10 @@ def preprocess(data, labels_path, zf, user, dataset):
         data = data[~data[dataset.label_column].isin(dataset.exclude_labels)]
 
     data_x = data[dataset.sensor_columns]
-
     if dataset.label_files is not None:
         data_y = get_labels_from_file(labels_path, zf, user, dataset)
     else:
         data_y = data[dataset.label_column]
-
     if dataset.label_map is not None:
         data_y = data_y.replace(dataset.label_map)
         data_y = data_y.fillna(0)
@@ -75,10 +73,10 @@ def load_data(target, zf, user, dataset):
 
     if dataset.user_column is not None:
         data = separate_user_data(data, user, dataset)
-
-    if user in ['train', 'test', 'val']:
-        data = data[int(dataset.split[user][0] * len(data)):int(dataset.split[user][1] * len(data))]
-
+    # MEMO: I comment out this part because I don't need to split the data into train, val, test.
+    # This split a single data into train, val, test into 0.7:0.2:0.1 ratio.
+    # if user in ['train', 'test', 'val']:
+    #     data = data[int(dataset.split[user][0] * len(data)):int(dataset.split[user][1] * len(data))]
     return data
 
 
@@ -149,6 +147,7 @@ def iter_files(dataset, zf, user):
 
 
 def preprocess_dataset(dataset, args):
+    print(dataset.name)
     zf = dataset.open_zip()
 
     makedir(f'{args.output_dir}/{dataset.name}')

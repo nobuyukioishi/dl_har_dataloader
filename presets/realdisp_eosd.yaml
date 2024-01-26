@@ -1,0 +1,85 @@
+---
+# Dataset: RealDisp - Effect of Sensor Displacement
+name: 'realdisp'
+data_archive: 'realdisp+activity+recognition+dataset.zip'
+data_files:
+  train:
+    - 'subject1_ideal.log'
+    - 'subject2_ideal.log'
+    - 'subject3_ideal.log'
+    - 'subject4_ideal.log'
+    - 'subject5_ideal.log'
+    - 'subject6_ideal.log'
+    - 'subject7_ideal.log'
+    - 'subject8_ideal.log'
+    - 'subject9_ideal.log'
+    - 'subject10_ideal.log'
+    - 'subject11_ideal.log'
+    - 'subject12_ideal.log'
+    - 'subject13_ideal.log'
+    - 'subject14_ideal.log'
+    - 'subject15_ideal.log'
+    - 'subject16_ideal.log'
+    - 'subject17_ideal.log'
+  val:
+    - 'subject16_self.log'
+    - 'subject17_self.log'
+  test:
+    - 'subject1_self.log'
+    - 'subject2_self.log'
+    - 'subject3_self.log'
+    - 'subject4_self.log'
+    - 'subject5_self.log'
+    - 'subject6_self.log'
+    - 'subject7_self.log'
+    - 'subject8_self.log'
+    - 'subject9_self.log'
+    - 'subject10_self.log'
+    - 'subject11_self.log'
+    - 'subject12_self.log'
+    - 'subject13_self.log'
+    - 'subject14_self.log'
+    - 'subject15_self.log'
+class_map:
+  - "Null"
+  - "Walking"
+  - "Jogging"
+  - "Running"
+  - "Jump Up"
+  - "Jump Front & Back"
+  - "Jump Sideways"
+  - "Jump Leg/Arms Open/Closed"
+  - "Jump Rope"
+  - "Trunk Twist (arms outstretched)"
+  - "Trunk Twist (elbows bended)"
+  - "Waist Bends Forward"
+  - "Waist Rotation"
+  - "Waist Bends (reach foot with opposite hand)"
+  - "Reach Heels Backwards"
+  - "Lateral Bend (left or right)"
+  - "Lateral Bend Arm Up (left or right)"
+  - "Repetitive Forward Stretching"
+  - "Upper Trunk and Lower Body Opposite Twist"
+  - "Arms Lateral Elevation"
+  - "Arms Frontal Elevation"
+  - "Frontal Hand Claps"
+  - "Arms Frontal Crossing"
+  - "Shoulders High Amplitude Rotation"
+  - "Shoulders Low Amplitude Rotation"
+  - "Arms Inner Rotation"
+  - "Knees (alternatively) to the Breast"
+  - "Heels (alternatively) to the Backside"
+  - "Knees Bending (crouching)"
+  - "Knees (alternatively) Bend Forward"
+  - "Rotation on the Knees"
+  - "Rowing"
+  - "Elliptic Bike"
+  - "Cycling"
+n_classes: 33
+n_channels: 12
+label_column: 119
+sensor_columns: [2, 3, 4, 5, 6, 7, 54, 55, 56, 57, 58, 59] # Acc and Gyro of RLA and LLA
+sr: 50
+url: 'https://archive.ics.uci.edu/static/public/305/realdisp+activity+recognition+dataset.zip'
+down_sample: False
+delimiter: '\s+'
