@@ -82,7 +82,7 @@ class SensorDataset(Dataset):
         self.target = np.concatenate([np.load(path, allow_pickle=True)['target'] for path in self.path_dataset])
 
         # Scale the data
-        if scaling == "normalize" and (self.min_vals is not None or self.max_vals is not None):
+        if scaling != "normalize" and (self.min_vals is not None or self.max_vals is not None):
             raise ValueError(f"min_vals and max_vals cannot be specified when scaling is {scaling}.")
 
         if self.scaling == 'normalize':
