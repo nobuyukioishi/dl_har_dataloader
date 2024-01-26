@@ -5,12 +5,11 @@
 # Email: lp349@sussex.ac.uk
 ##################################################
 
-import numpy as np
-import pandas as pd
-
-from scipy.io import loadmat
 from io import BytesIO
 
+import numpy as np
+import pandas as pd
+from scipy.io import loadmat
 from scipy.signal import butter, lfilter
 
 
@@ -27,6 +26,7 @@ def normalize(data, mean, std):
         Normalized sensor data
     """
     return (data - mean) / std
+
 
 
 def downsample(data_x, data_y, dataset):
@@ -49,8 +49,8 @@ def downsample(data_x, data_y, dataset):
     data_x = data_x[::factor]
     data_y = data_y[::factor]
 
-    print(f'Downsampled data from {init_shapes[0]} samples @ {fs}Hz => {data_x.shape} samples @ {fs/factor:.2f}Hz')
-    print(f'Downsampled labels from {init_shapes[1]} labels @ {fs}Hz => {data_y.shape} samples @ {fs/factor:.2f}Hz')
+    print(f'Downsampled data from {init_shapes[0]} samples @ {fs}Hz => {data_x.shape} samples @ {fs / factor:.2f}Hz')
+    print(f'Downsampled labels from {init_shapes[1]} labels @ {fs}Hz => {data_y.shape} samples @ {fs / factor:.2f}Hz')
 
     return pd.DataFrame(data_x, columns=x_cols), pd.Series(data_y, name=y_name)
 
