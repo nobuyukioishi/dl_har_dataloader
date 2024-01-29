@@ -37,6 +37,8 @@ class SensorDataset(Dataset):
         scaling="standardize",
         min_vals=None,
         max_vals=None,
+        mean=None,
+        std=None,
     ):
         """
         Initialize instance.
@@ -50,6 +52,10 @@ class SensorDataset(Dataset):
         :param name: str. What to call this dataset (i.e. train, test, val).
         :param lazy_load: bool. Whether to load the whole windowed data into memory or not.
         :param scaling: str. What type of preprocessing to apply to the data. Options 'normalize', 'standardize', or None.
+        :param min_vals: numpy array. Minimum values for each sensor channel. Used for normalization.
+        :param max_vals: numpy array. Maximum values for each sensor channel. Used for normalization.
+        :param mean: numpy array. Mean values for each sensor channel. Used for standardization.
+        :param std: numpy array. Standard deviation values for each sensor channel. Used for standardization.
         """
 
         self.dataset = dataset
@@ -63,6 +69,8 @@ class SensorDataset(Dataset):
         self.scaling = scaling
         self.min_vals = min_vals
         self.max_vals = max_vals
+        self.mean = mean
+        self.std = std
 
         if name is None:
             self.name = 'No name specified'
@@ -85,10 +93,16 @@ class SensorDataset(Dataset):
         if scaling != "normalize" and (self.min_vals is not None or self.max_vals is not None):
             raise ValueError(f"min_vals and max_vals cannot be specified when scaling is {scaling}.")
 
+        if self.mean is None:
+            self.mean = np.mean(self.data, axis=0)
+        if self.std is None:
+            self.std = np.std(self.data, axis=0)
+            self.std[self.std == 0] = 1
+
         if self.scaling == 'normalize':
             self.data = normalize(self.data, min_vals=self.min_vals, max_vals=self.max_vals, verbose=self.verbose)
         elif self.scaling == 'standardize':
-            self.data = standardize(self.data)
+            self.data = standardize(self.data, self.mean, self.std)
         elif self.scaling is None:
             pass
         else:

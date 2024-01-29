@@ -24,10 +24,38 @@ def sliding_window(x, y, window, stride, scheme="max"):
     return data, target
 
 
-def standardize(data):
-    std = np.std(data, axis=0)
-    std[std == 0] = 1
-    return (data - np.mean(data, axis=0)) / std
+def standardize(data, mean=None, std=None, verbose=False):
+    """
+    Standardizes all sensor channels
+
+    :param data: numpy integer matrix (N, channels)
+        Sensor data
+    :param mean: (optional) numpy integer array (channels, )
+        Array containing mean values for each sensor channel. When given, the mean is subtracted from the data.
+    :param std: (optional) numpy integer array (channels, )
+        Array containing the standard deviation of each sensor channel. When given, the data is divided by the standard deviation.
+    :param verbose: bool
+        Whether to print debug information
+    :return:
+    """
+    if verbose:
+        # I want to display the mean (given or calculated) here as the verbose message
+        if mean is None or std is None:
+            print("mean and std not specified. Calculating from data...")
+            print(f'data - mean: {np.mean(data, axis=0)}')
+            print(f'data - std: {np.std(data, axis=0)}')
+
+    if mean is None:
+        mean = np.mean(data, axis=0)
+    if std is None:
+        std = np.std(data, axis=0)
+        std[std == 0] = 1
+
+    if verbose:
+        print(f'mean used: {mean}')
+        print(f'std used: {std}')
+
+    return (data - mean) / std
 
 
 def normalize(data: np.ndarray, min_vals: np.ndarray | None = None, max_vals: np.ndarray | None = None, verbose=False):
