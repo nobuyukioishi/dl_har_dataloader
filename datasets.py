@@ -79,7 +79,7 @@ class SensorDataset(Dataset):
             self.path_dataset = glob(os.path.join(path_processed, '*.npz'))
         elif isinstance(prefix, str):
             self.prefix = prefix
-            self.path_dataset = glob(os.path.join(path_processed, f'{prefix}*.npz'))
+            self.path_dataset = glob(os.path.join(path_processed, f'{prefix}.npz'))
         elif isinstance(prefix, list):
             self.prefix = prefix
             self.path_dataset = []
