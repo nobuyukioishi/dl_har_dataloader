@@ -98,6 +98,10 @@ class SensorDataset(Dataset):
         if self.std is None:
             self.std = np.std(self.data, axis=0)
             self.std[self.std == 0] = 1
+        if self.min_vals is None:
+            self.min_vals = np.min(self.data, axis=0)
+        if self.max_vals is None:
+            self.max_vals = np.max(self.data, axis=0)
 
         if self.scaling == 'normalize':
             self.data = normalize(self.data, min_vals=self.min_vals, max_vals=self.max_vals, verbose=self.verbose)
