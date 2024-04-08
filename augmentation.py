@@ -26,7 +26,6 @@ def scaling(x, sigma=0.1, columns=None):
     if columns is None:
         # Apply scaling to all columns
         factor = np.random.normal(loc=1., scale=sigma, size=(x.shape[1]))
-        print(factor)
     else:
         # Apply scaling only to specified columns
         factor = np.ones((x.shape[0], x.shape[1]))  # Initialize factors as 1 for all elements
@@ -55,7 +54,6 @@ def rotate(x, rotation_range):
     """
     # Randomly pick a rotation angle within the specified range for each axis
     angles = {axis: np.random.uniform(*rotation_range[axis]) for axis in ['x', 'y', 'z']}
-    print(angles)
     # Convert angles from degrees to radians
     angles_rad = np.deg2rad([angles['x'], angles['y'], angles['z']])
 
