@@ -35,7 +35,7 @@ def scaling(x, sigma=0.1, columns=None):
     return np.multiply(x, factor)
 
 
-def rotate(x, rotation_range):
+def rotate(x, rotation_range=None):
     from scipy.spatial.transform import Rotation as R
     """
     Apply the same random rotation to all 3D data points sets within each sample.
@@ -53,6 +53,9 @@ def rotate(x, rotation_range):
     - Rotated data with the same shape as the input.
     """
     # Randomly pick a rotation angle within the specified range for each axis
+    if rotation_range is None:
+        rotation_range = {'x': (-180, 180), 'y': (-180, 180), 'z': (-180, 180)}
+
     angles = {axis: np.random.uniform(*rotation_range[axis]) for axis in ['x', 'y', 'z']}
     # Convert angles from degrees to radians
     angles_rad = np.deg2rad([angles['x'], angles['y'], angles['z']])
