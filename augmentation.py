@@ -129,36 +129,44 @@ def magnitude_warp(x, sigma=0.2, knot=4, columns=None):
     return ret
 
 
-def time_warp(x, sigma=0.2, knot=4, columns=None):
-    # Supported
-    from scipy.interpolate import CubicSpline
+def time_warp(x, n_speed_change=2, max_speed_ratio=1.5, seed=None):
     """
-    Apply time warping to specified columns of a (T, N) dataset.
+    Apply time warping to a (T, N) dataset with control over the max speed ratio,
+    leveraging PchipInterpolator's axis argument to avoid explicit loops.
 
     Parameters:
-    - x: Input data of shape (T, N), where T is time and N is the number of features.
-    - sigma: Standard deviation of the Gaussian distribution used for generating the warp.
-    - knot: Number of knots used in the cubic spline, excluding the endpoints.
-    - columns: A list of column indices to apply the warping. If None, applies to all columns.
+    - X: Input data of shape (T, N), where T is time and N is the number of features.
+    - n_speed_change: The number of speed changes in the time warp.
+    - max_speed_ratio: The maximum ratio of speed change in the warp.
+    - seed: Optional seed for random number generator.
 
     Returns:
     - Warped data with the same shape as the input.
     """
-    orig_steps = np.arange(x.shape[0])
-    if columns is None:
-        # Apply warping to all columns if none specified
-        columns = range(x.shape[1])
+    from scipy.interpolate import PchipInterpolator
+    np.random.seed(seed)
+    T, N = x.shape
 
-    # Generate warping parameters
-    random_warps = np.random.normal(loc=1.0, scale=sigma, size=(knot + 2,))
-    warp_steps = np.linspace(0, x.shape[0] - 1., num=knot + 2)
+    # Generate anchor points for the warp
+    anchors = np.linspace(0, T - 1, num=n_speed_change + 2)
 
-    ret = x.copy()  # Work on a copy of x to retain original data
-    for col in columns:
-        # Generate time warp for each specified column
-        time_warp = CubicSpline(warp_steps, warp_steps * random_warps)(orig_steps)
-        scale = (x.shape[0] - 1) / time_warp[-1]
-        ret[:, col] = np.interp(orig_steps, np.clip(scale * time_warp, 0, x.shape[0] - 1), x[:, col])
+    # Calculate max speed ratios for each segment
+    if isinstance(max_speed_ratio, (list, tuple)):
+        max_speed_ratio = np.random.uniform(low=max_speed_ratio[0], high=max_speed_ratio[1])
+    elif isinstance(max_speed_ratio, float):
+        max_speed_ratio = np.full(n_speed_change + 1, max_speed_ratio)
 
-    return ret
+    # Generate random speeds for each segment, ensuring the ratio constraint
+    segment_speeds = np.random.uniform(1.0, max_speed_ratio, size=(n_speed_change + 1,))
+    segment_speeds /= segment_speeds.mean()  # Normalize to maintain overall duration
 
+    # Determine the new anchor points after applying the speed changes
+    new_anchors = np.concatenate(([0], np.cumsum(np.diff(anchors) * segment_speeds)))
+
+    # Interpolate the original data onto the new, warped timeline using PchipInterpolator with axis=0
+    warp_interpolator = PchipInterpolator(new_anchors, anchors, axis=0, extrapolate=True)
+    warped_indices = warp_interpolator(np.arange(T))
+    data_interpolator = PchipInterpolator(np.arange(T), x, axis=0, extrapolate=True)
+    warped_X = data_interpolator(warped_indices)
+
+    return warped_X
