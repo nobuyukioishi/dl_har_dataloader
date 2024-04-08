@@ -39,8 +39,11 @@ class SensorDataset(Dataset):
         max_vals=None,
         mean=None,
         std=None,
+        aug_list=None,
+        aug_prob=None,
+        aug_params=None
     ):
-        """
+        """F
         Initialize instance.
         :param dataset: str. Name of target dataset.
         :param window: int. Sliding window size in samples.
@@ -56,6 +59,8 @@ class SensorDataset(Dataset):
         :param max_vals: numpy array. Maximum values for each sensor channel. Used for normalization.
         :param mean: numpy array. Mean values for each sensor channel. Used for standardization.
         :param std: numpy array. Standard deviation values for each sensor channel. Used for standardization.
+        :param aug_list: list. List of augmentation functions to apply to the data.
+        :param aug_prob: list. List of probabilities for each augmentation function.
         """
 
         self.dataset = dataset
@@ -71,6 +76,12 @@ class SensorDataset(Dataset):
         self.max_vals = max_vals
         self.mean = mean
         self.std = std
+
+        self.aug_list = aug_list
+        self.aug_prob = aug_prob
+        self.aug_params = aug_params
+
+
 
         if name is None:
             self.name = 'No name specified'
@@ -90,8 +101,8 @@ class SensorDataset(Dataset):
         self.target = np.concatenate([np.load(path, allow_pickle=True)['target'] for path in self.path_dataset])
 
         # Scale the data
-        if scaling != "normalize" and (self.min_vals is not None or self.max_vals is not None):
-            raise ValueError(f"min_vals and max_vals cannot be specified when scaling is {scaling}.")
+        # if scaling != "normalize" and (self.min_vals is not None or self.max_vals is not None):
+        #     raise ValueError(f"min_vals and max_vals cannot be specified when scaling is {scaling}.")
 
         if self.mean is None:
             self.mean = np.mean(self.data, axis=0)
@@ -111,6 +122,10 @@ class SensorDataset(Dataset):
             pass
         else:
             raise ValueError(f'Unknown preprocessing scheme {self.scaling}.')
+
+        if self.aug_list is not None and self.prefix not in ["val", "test"]:
+            for aug, prob, params in zip(self.aug_list, self.aug_prob, self.aug_params):
+                print(f"Data Augmentation: {aug} with probability {prob} and params {params}")
 
         # To save memory, generate the windowed data on the fly
         if lazy_load:
@@ -141,15 +156,26 @@ class SensorDataset(Dataset):
         return self.len
 
     def __getitem__(self, index):
+
         if self.lazy_load:
             start = index * self.stride
             end = start + self.window
-            data = torch.FloatTensor(self.data[start:end])
-            target = torch.LongTensor([int(self._get_label(start, end))])
+            data = self.data[start:end]
+            target = [int(self._get_label(start, end))]
         else:
-            data = torch.FloatTensor(self.data[index])
-            target = torch.LongTensor([int(self.target[index])])
+            data = self.data[index]
+            target = [int(self.target[index])]
 
+        if self.aug_list is not None and self.prefix not in ["val", "test"]:
+            for aug, prob, params in zip(self.aug_list, self.aug_prob, self.aug_params):
+                if np.random.rand() < prob:
+                    if params is None:
+                        data = aug(data)
+                    else:
+                        data = aug(data, **params)
+
+        data = torch.FloatTensor(data)
+        target = torch.LongTensor(target)
         idx = torch.from_numpy(np.array(index))
         return data, target, idx
 
