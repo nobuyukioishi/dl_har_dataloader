@@ -13,6 +13,8 @@ from torch.utils.data.dataset import Dataset
 from dl_har_dataloader.dataloader_utils import paint
 from .dataset_utils import sliding_window, normalize, standardize
 
+from dl_har_dataloader import augmentation
+
 __all__ = ["SensorDataset"]
 
 
@@ -41,7 +43,7 @@ class SensorDataset(Dataset):
         std=None,
         aug_list=None,
         aug_prob=None,
-        aug_params=None
+        aug_params=None,
     ):
         """F
         Initialize instance.
@@ -77,28 +79,44 @@ class SensorDataset(Dataset):
         self.mean = mean
         self.std = std
 
-        self.aug_list = aug_list
+        self.aug_dict = {
+            "jitter": augmentation.jitter,
+            "scaling": augmentation.scaling,
+            "permutation": augmentation.permutation,
+            "rotate": augmentation.rotate,
+            "time_warp": augmentation.time_warp,
+            "magnitude_warp": augmentation.magnitude_warp,
+        }
+
+        if aug_list is None:
+            self.aug_list = None  # No augmentation will be applied
+        else:
+            self.aug_list = [self.aug_dict[aug_name] for aug_name in aug_list]
         self.aug_prob = aug_prob
         self.aug_params = aug_params
 
-
-
         if name is None:
-            self.name = 'No name specified'
+            self.name = "No name specified"
         if prefix is None:
-            self.prefix = 'No prefix specified'
-            self.path_dataset = glob(os.path.join(path_processed, '*.npz'))
+            self.prefix = "No prefix specified"
+            self.path_dataset = glob(os.path.join(path_processed, "*.npz"))
         elif isinstance(prefix, str):
             self.prefix = prefix
-            self.path_dataset = glob(os.path.join(path_processed, f'{prefix}.npz'))
+            self.path_dataset = glob(os.path.join(path_processed, f"{prefix}.npz"))
         elif isinstance(prefix, list):
             self.prefix = prefix
             self.path_dataset = []
             for prefix in prefix:
-                self.path_dataset.extend(glob(os.path.join(path_processed, f'{prefix}*.npz')))
+                self.path_dataset.extend(
+                    glob(os.path.join(path_processed, f"{prefix}*.npz"))
+                )
 
-        self.data = np.concatenate([np.load(path, allow_pickle=True)['data'] for path in self.path_dataset])
-        self.target = np.concatenate([np.load(path, allow_pickle=True)['target'] for path in self.path_dataset])
+        self.data = np.concatenate(
+            [np.load(path, allow_pickle=True)["data"] for path in self.path_dataset]
+        )
+        self.target = np.concatenate(
+            [np.load(path, allow_pickle=True)["target"] for path in self.path_dataset]
+        )
 
         # Scale the data
         # if scaling != "normalize" and (self.min_vals is not None or self.max_vals is not None):
@@ -114,34 +132,39 @@ class SensorDataset(Dataset):
         if self.max_vals is None:
             self.max_vals = np.max(self.data, axis=0)
 
-        if self.scaling == 'normalize':
-            self.data = normalize(self.data, min_vals=self.min_vals, max_vals=self.max_vals, verbose=self.verbose)
-        elif self.scaling == 'standardize':
+        if self.scaling == "normalize":
+            self.data = normalize(
+                self.data,
+                min_vals=self.min_vals,
+                max_vals=self.max_vals,
+                verbose=self.verbose,
+            )
+        elif self.scaling == "standardize":
             self.data = standardize(self.data, self.mean, self.std)
         elif self.scaling is None:
             pass
         else:
-            raise ValueError(f'Unknown preprocessing scheme {self.scaling}.')
+            raise ValueError(f"Unknown preprocessing scheme {self.scaling}.")
 
         if self.aug_list is not None and self.prefix not in ["val", "test"]:
             for aug, prob, params in zip(self.aug_list, self.aug_prob, self.aug_params):
-                print(f"Data Augmentation: {aug} with probability {prob} and params {params}")
+                print(
+                    f"Data Augmentation: {aug} with probability {prob} and params {params}"
+                )
 
         # To save memory, generate the windowed data on the fly
         if lazy_load:
             # Pre-calculate the number of windows
             self.len = (self.data.shape[0] - self.window) // self.stride + 1
         else:
-            self.data, self.target = sliding_window(self.data, self.target, self.window, self.stride)
+            self.data, self.target = sliding_window(
+                self.data, self.target, self.window, self.stride
+            )
             self.len = self.data.shape[0]
             assert self.data.shape[0] == self.target.shape[0]
 
         if name is None:
-            print(
-                paint(
-                    f"Creating {self.dataset} HAR dataset of size {self.len} ..."
-                )
-            )
+            print(paint(f"Creating {self.dataset} HAR dataset of size {self.len} ..."))
         else:
             print(
                 paint(
@@ -156,7 +179,6 @@ class SensorDataset(Dataset):
         return self.len
 
     def __getitem__(self, index):
-
         if self.lazy_load:
             start = index * self.stride
             end = start + self.window
@@ -179,13 +201,12 @@ class SensorDataset(Dataset):
         idx = torch.from_numpy(np.array(index))
         return data, target, idx
 
-    def _get_label(self, start, end, scheme='max'):
-        if scheme == 'last':
+    def _get_label(self, start, end, scheme="max"):
+        if scheme == "last":
             return self.target[end - 1]
 
-        elif scheme == 'max':
+        elif scheme == "max":
             return np.argmax(np.bincount(self.target[start:end]))
 
         else:
             raise ValueError(f"Unknown scheme {scheme}.")
-
