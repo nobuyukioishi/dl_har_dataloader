@@ -42,8 +42,8 @@ def standardize(data, mean=None, std=None, verbose=False):
         # I want to display the mean (given or calculated) here as the verbose message
         if mean is None or std is None:
             print("mean and std not specified. Calculating from data...")
-            print(f'data - mean: {np.mean(data, axis=0)}')
-            print(f'data - std: {np.std(data, axis=0)}')
+            print(f"data - mean: {np.mean(data, axis=0)}")
+            print(f"data - std: {np.std(data, axis=0)}")
 
     if mean is None:
         mean = np.mean(data, axis=0)
@@ -52,13 +52,18 @@ def standardize(data, mean=None, std=None, verbose=False):
         std[std == 0] = 1
 
     if verbose:
-        print(f'mean used: {mean}')
-        print(f'std used: {std}')
+        print(f"mean used: {mean}")
+        print(f"std used: {std}")
 
     return (data - mean) / std
 
 
-def normalize(data: np.ndarray, min_vals: np.ndarray | None = None, max_vals: np.ndarray | None = None, verbose=False):
+def normalize(
+    data: np.ndarray,
+    min_vals: np.ndarray = None,
+    max_vals: np.ndarray = None,
+    verbose=False,
+):
     """Normalizes all sensor channels
 
     :param data: numpy integer matrix
@@ -77,19 +82,20 @@ def normalize(data: np.ndarray, min_vals: np.ndarray | None = None, max_vals: np
     if max_vals is None:
         max_vals = np.max(data, axis=0)
 
-    assert min_vals.shape == max_vals.shape == data.shape[1:], \
-        f'Shape mismatched! min_vals: {min_vals.shape}, max_vals: {max_vals.shape}, data: {data.shape}'
-    assert np.all(min_vals <= max_vals), f'min_vals: {min_vals}, max_vals: {max_vals}'
+    assert (
+        min_vals.shape == max_vals.shape == data.shape[1:]
+    ), f"Shape mismatched! min_vals: {min_vals.shape}, max_vals: {max_vals.shape}, data: {data.shape}"
+    assert np.all(min_vals <= max_vals), f"min_vals: {min_vals}, max_vals: {max_vals}"
 
     # Avoid division by zero in case max_val equals min_val
     range_vals = np.where((max_vals - min_vals) == 0, 1, (max_vals - min_vals))
     normalized_data = (data - min_vals) / range_vals
 
     if verbose:
-        print(f'min_vals: {min_vals}')
-        print(f'max_vals: {max_vals}')
-        print(f'range_vals {range_vals}')
-        print(f'normalized_data - max: {np.max(normalized_data, axis=0)}')
-        print(f'normalized_data - min: {np.min(normalized_data, axis=0)}')
+        print(f"min_vals: {min_vals}")
+        print(f"max_vals: {max_vals}")
+        print(f"range_vals {range_vals}")
+        print(f"normalized_data - max: {np.max(normalized_data, axis=0)}")
+        print(f"normalized_data - min: {np.min(normalized_data, axis=0)}")
 
     return normalized_data
